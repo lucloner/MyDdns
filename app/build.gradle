@@ -4,7 +4,17 @@ apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
 
+def pass=(new String((new File('../pass.txt')).bytes)).replace("\n","")
+
 android {
+    signingConfigs {
+        config {
+            keyAlias 'big'
+            keyPassword '12345678'
+            storeFile file('../../biggee_sign_pass12345678.jks')
+            storePassword '12345678'
+        }
+    }
     compileSdkVersion 'android-Q'
     defaultConfig {
         applicationId "net.vicp.biggee.net.MyDdns"
@@ -13,17 +23,22 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        signingConfig signingConfigs.config
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField "String", "myPass", "\"$pass\""
+            signingConfig signingConfigs.config
         }
     }
     buildToolsVersion '28.0.3'
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+    productFlavors {
     }
 }
 

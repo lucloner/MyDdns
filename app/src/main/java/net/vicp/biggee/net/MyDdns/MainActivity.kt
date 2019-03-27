@@ -12,6 +12,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
@@ -37,17 +38,18 @@ class MainActivity : AppCompatActivity() {
         }.build()
 
         b.setOnClickListener {
-            Thread {
+            b.isEnabled = false
+            Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate({
                 val c=OkHttpClient().newBuilder().apply {
                     readTimeout(5,TimeUnit.SECONDS)
                     cache(Cache(cacheDir,Int.MAX_VALUE.toLong()))
-                    }.build()
+                }.build()
                 val res=c.newCall(r).execute()
                 runOnUiThread{
                     l.text = "${SimpleDateFormat.getDateTimeInstance().format(Date())}\n"
                     l.append(res.body()!!.string())
                 }
-            }.start()
+            }, 0, 5, TimeUnit.MINUTES)
         }
 
         Thread.setDefaultUncaughtExceptionHandler { t, e ->

@@ -9,7 +9,7 @@ def pass=(new String((new File('../pass.txt')).bytes)).replace("\n","")
 android {
     signingConfigs {
         config {
-            keyAlias 'big'
+            keyAlias 'key0'
             keyPassword '12345678'
             storeFile file('../../biggee_sign_pass12345678.jks')
             storePassword '12345678'

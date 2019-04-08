@@ -11,6 +11,7 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import net.vicp.biggee.kotlin.Service
+import net.vicp.biggee.kotlin.Shell
 import okhttp3.Cache
 import okhttp3.Credentials
 import okhttp3.OkHttpClient
@@ -74,7 +75,7 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
         val b = findViewById<View>(R.id.button) as Button
         val d = findViewById<EditText>(R.id.ddns)
         runOnUiThread {
-            d.setText("Biggee.vicp.net")
+            d.setText("biggee.vicp.net")
         }
         val u = findViewById<EditText>(R.id.username)
         val p = findViewById<EditText>(R.id.password)
@@ -105,6 +106,7 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
         Thread {
             val bindIntent = Intent(this, Service::class.java)
             bindService(bindIntent, this, BIND_AUTO_CREATE)
+            startService(bindIntent)
         }.start()
 
         b.setOnClickListener {
@@ -122,6 +124,10 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
                 if (!Service.adbRestarted) {
                     serviceBinder.adbRemote()
                 }
+            }
+            runOnUiThread {
+                l.append(Shell.log)
+                Shell.log.clear()
             }
         }, 0, 1, TimeUnit.MINUTES)
     }

@@ -29,6 +29,10 @@
             android:text="@string/go"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" android:id="@+id/button"/>
+    <Button
+            android:text="@string/adb"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:id="@+id/adbbutton"/>
     <TextView
             android:layout_width="match_parent"
             android:layout_height="match_parent" android:id="@+id/logView" android:singleLine="false"/>

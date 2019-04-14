@@ -1,12 +1,10 @@
 package net.vicp.biggee.kotlin
 
-import android.util.Log
 import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.InputStreamReader
 
 object Shell {
-    val log = StringBuilder()
 
     /**
      * 执行shell指令
@@ -36,12 +34,11 @@ object Shell {
                 ch = mReader.read(buff)
             }
             mReader.close()
-            log.append(mRespBuff)
-            Log.v("Shell", mRespBuff.toString())
+            Service.addLog("shell return:$mRespBuff")
             return true
         } catch (e: Exception) {
             e.printStackTrace()
-            log.append(e.toString())
+            Service.addLog("shell exception:$e")
             return false
         }
 

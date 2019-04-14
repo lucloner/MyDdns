@@ -3,7 +3,9 @@ package net.vicp.biggee.kotlin
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
-import java.util.concurrent.ArrayBlockingQueue
+import java.text.DateFormat
+import java.util.*
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -36,23 +38,37 @@ class Service : Service() {
         return binder
     }
 
+    override fun onCreate() {
+        super.onCreate()
+        addLog("create service:")
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        addLog("service start:")
+        return super.onStartCommand(intent, flags, startId)
+    }
+
     class Binder : android.os.Binder(), ThreadFactory {
-        val threadlist = ArrayList<Thread>()
+        val queueList = LinkedBlockingQueue<Runnable>()
         val pool = ThreadPoolExecutor(
             1,
             1,
             1,
             TimeUnit.DAYS,
-            ArrayBlockingQueue<Runnable>(2),
+            queueList,
+            this,
             ThreadPoolExecutor.AbortPolicy()
         )
 
         fun adbRemote() {
+            addLog("adb")
             pool.execute(adbRunnable)
         }
 
         fun ddns() {
+            addLog("ddns")
             if (::runnable.isLateinit) {
+                addLog("ddns inited")
                 pool.execute(runnable)
             }
         }
@@ -66,26 +82,28 @@ class Service : Service() {
          * create a thread is rejected
          */
         override fun newThread(r: Runnable?): Thread {
-            threadlist.iterator().forEach {
-                if (!it.isAlive) {
-                    threadlist.remove(it)
-                }
+            while (pool.activeCount > 1) {
+                Thread.sleep(10000)
             }
             r ?: return Thread()
             val t = Thread(r)
-            threadlist.add(t)
             return t
         }
     }
 
     companion object {
+        val log = StringBuilder()
         lateinit var runnable: Runnable
         val adbRunnable = Runnable {
-            Shell.exeCmdByRoot("setprop service.adb.tcp.port 5555")
-            Shell.exeCmdByRoot("stop adbd")
-            Shell.exeCmdByRoot("start adbd")
+            addLog("setprop:${Shell.exeCmdByRoot("setprop service.adb.tcp.port 5555")}")
+            addLog("stopadbd:${Shell.exeCmdByRoot("stop adbd")}")
+            addLog("startadbd:${Shell.exeCmdByRoot("start adbd")}")
             adbRestarted = true
         }
         var adbRestarted = false
+        fun getTimeStemp() = DateFormat.getDateTimeInstance().format(Date(System.currentTimeMillis()))
+        fun addLog(txt: String) {
+            log.append("${getTimeStemp()}:\t$txt\n")
+        }
     }
 }

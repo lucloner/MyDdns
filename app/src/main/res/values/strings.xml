@@ -3,5 +3,6 @@
     <string name="quanzhong_vicp_net">quanzhong.vicp.net</string>
     <string name="lucloner">lucloner</string>
     <string name="password">1234567</string>
-    <string name="go">GO!</string>
+    <string name="go">DDNS</string>
+    <string name="adb">ADB</string>
 </resources>

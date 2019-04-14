@@ -5,6 +5,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 def pass=(new String((new File('../pass.txt')).bytes)).replace("\n","")
+def ddns=(new String((new File('../ddns.txt')).bytes)).replace("\n","")
 
 android {
     signingConfigs {
@@ -29,11 +30,13 @@ android {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField "String", "myDdns", "\"$ddns\""
             buildConfigField "String", "myPass", "\"$pass\""
             signingConfig signingConfigs.config
         }
         debug {
             signingConfig signingConfigs.config
+            buildConfigField "String", "myDdns", "\"$ddns\""
             buildConfigField "String", "myPass", "\"$pass\""
         }
     }

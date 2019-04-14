@@ -11,14 +11,10 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import net.vicp.biggee.kotlin.Service
-import net.vicp.biggee.kotlin.Shell
 import okhttp3.Cache
 import okhttp3.Credentials
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.text.SimpleDateFormat
-import java.util.*
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity(), ServiceConnection {
@@ -35,7 +31,7 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
      * connection has been lost.
      */
     override fun onServiceDisconnected(name: ComponentName?) {
-
+        Service.addLog("service disconnected")
     }
 
     /**
@@ -57,11 +53,14 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
      */
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
         serviceBinder = service as Service.Binder
+        Service.addLog("server connected")
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        Service.addLog("app started")
 
         val l = findViewById<TextView>(R.id.logView)
         Thread.setDefaultUncaughtExceptionHandler { t, e ->
@@ -73,22 +72,21 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
         }
 
         val b = findViewById<View>(R.id.button) as Button
+        val badb = findViewById<View>(R.id.adbbutton) as Button
         val d = findViewById<EditText>(R.id.ddns)
-        runOnUiThread {
-            d.setText("biggee.vicp.net")
-        }
         val u = findViewById<EditText>(R.id.username)
         val p = findViewById<EditText>(R.id.password)
         runOnUiThread {
+            d.setText(BuildConfig.myDdns)
             p.setText(BuildConfig.myPass)
         }
 
         val s = "http://ddns.oray.com/ph/update?hostname=${d.text}"
-        val a=Credentials.basic(u.text.toString(),p.text.toString())
-        val r=Request.Builder().apply {
+        val a = Credentials.basic(u.text.toString(), p.text.toString())
+        val r = Request.Builder().apply {
             get()
             url(s)
-            header("Authorization",a)
+            header("Authorization", a)
         }.build()
 
         Service.runnable = Runnable {
@@ -98,37 +96,32 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
             }.build()
             val res = c.newCall(r).execute()
             runOnUiThread {
-                l.append("${SimpleDateFormat.getDateTimeInstance().format(Date())}\n")
-                l.append(res.body()!!.string())
+                if (l.text.length > 1000) {
+                    l.text = ""
+                }
+                Service.addLog(res.body()!!.string())
+                l.append(Service.log)
+                Service.log.clear()
             }
         }
 
         Thread {
             val bindIntent = Intent(this, Service::class.java)
             bindService(bindIntent, this, BIND_AUTO_CREATE)
-            startService(bindIntent)
         }.start()
 
         b.setOnClickListener {
-            b.isEnabled = false
-            Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate({
-                if (::serviceBinder.isLateinit) {
-                    serviceBinder.ddns()
-                }
-            }, 0, 1, TimeUnit.MINUTES)
-        }
-
-        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate({
+            Service.addLog("button ddns clicked")
             if (::serviceBinder.isLateinit) {
                 serviceBinder.ddns()
-                if (!Service.adbRestarted) {
-                    serviceBinder.adbRemote()
-                }
             }
-            runOnUiThread {
-                l.append(Shell.log)
-                Shell.log.clear()
+        }
+
+        badb.setOnClickListener {
+            Service.addLog("button adb clicked")
+            if (::serviceBinder.isLateinit) {
+                serviceBinder.adbRemote()
             }
-        }, 0, 1, TimeUnit.MINUTES)
+        }
     }
 }

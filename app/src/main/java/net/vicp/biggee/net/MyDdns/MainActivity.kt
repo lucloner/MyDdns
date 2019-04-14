@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.Handler
 import android.os.IBinder
 import android.view.View
 import android.widget.Button
@@ -101,6 +102,15 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
             }
         }
 
+        val waitService = Runnable {
+            Service.addLog("check service")
+            while (serviceBinder == null) {
+                Service.addLog("waiting service")
+                Thread.sleep(1000)
+            }
+            showLog.run()
+        }
+
         Service.runnable = Runnable {
             val c = OkHttpClient().newBuilder().apply {
                 readTimeout(5, TimeUnit.SECONDS)
@@ -118,28 +128,53 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
 
         b.setOnClickListener {
             Service.addLog("button ddns clicked")
+            waitService.run()
             serviceBinder ?: return@setOnClickListener
             serviceBinder!!.ddns()
+            Thread.sleep(1000)
             showLog.run()
         }
 
         badb.setOnClickListener {
             Service.addLog("button adb clicked")
+            waitService.run()
             serviceBinder ?: return@setOnClickListener
             serviceBinder!!.adbRemote()
+            Thread.sleep(1000)
             showLog.run()
         }
 
         bloop.setOnClickListener {
             Service.addLog("button loop clicked")
+            waitService.run()
             serviceBinder ?: return@setOnClickListener
             serviceBinder!!.schedule.scheduleAtFixedRate({
                 Service.addLog("ddns schedule started")
                 serviceBinder!!.pool.execute {
                     serviceBinder!!.ddns()
+                    Thread.sleep(1000)
                     showLog.run()
                 }
             }, 0, 1, TimeUnit.MINUTES)
         }
+
+        Handler().postDelayed({
+            try {
+                b.performClick()
+            } catch (e: Exception) {
+                Service.addLog(e.localizedMessage)
+            }
+            try {
+                badb.performClick()
+            } catch (e: Exception) {
+                Service.addLog(e.localizedMessage)
+            }
+            try {
+                bloop.performClick()
+            } catch (e: Exception) {
+                Service.addLog(e.localizedMessage)
+            }
+            showLog.run()
+        }, 1000)
     }
 }

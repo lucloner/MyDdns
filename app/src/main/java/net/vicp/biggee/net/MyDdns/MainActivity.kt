@@ -10,7 +10,6 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.activity_main.*
 import net.vicp.biggee.kotlin.Service
 import okhttp3.Cache
 import okhttp3.Credentials
@@ -19,7 +18,7 @@ import okhttp3.Request
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity(), ServiceConnection {
-    lateinit var serviceBinder: Service.Binder
+    var serviceBinder: Service.Binder? = null
 
     /**
      * Called when a connection to the Service has been lost.  This typically
@@ -33,6 +32,7 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
      */
     override fun onServiceDisconnected(name: ComponentName?) {
         Service.addLog("service disconnected")
+        serviceBinder = null
     }
 
     /**
@@ -118,32 +118,28 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
 
         b.setOnClickListener {
             Service.addLog("button ddns clicked")
-            if (::serviceBinder.isLateinit) {
-                serviceBinder.ddns()
-            }
+            serviceBinder ?: return@setOnClickListener
+            serviceBinder!!.ddns()
             showLog.run()
         }
 
         badb.setOnClickListener {
             Service.addLog("button adb clicked")
-            if (::serviceBinder.isLateinit) {
-                serviceBinder.adbRemote()
-            }
+            serviceBinder ?: return@setOnClickListener
+            serviceBinder!!.adbRemote()
             showLog.run()
         }
 
-        loopbutton.setOnClickListener {
+        bloop.setOnClickListener {
             Service.addLog("button loop clicked")
-            if (::serviceBinder.isLateinit) {
-                serviceBinder.schedule.scheduleAtFixedRate({
-                    Service.addLog("ddns schedule started")
-                    serviceBinder.pool.execute {
-                        serviceBinder.ddns()
-                        showLog.run()
-                    }
-                }, 0, 1, TimeUnit.MINUTES)
-            }
-
+            serviceBinder ?: return@setOnClickListener
+            serviceBinder!!.schedule.scheduleAtFixedRate({
+                Service.addLog("ddns schedule started")
+                serviceBinder!!.pool.execute {
+                    serviceBinder!!.ddns()
+                    showLog.run()
+                }
+            }, 0, 1, TimeUnit.MINUTES)
         }
     }
 }

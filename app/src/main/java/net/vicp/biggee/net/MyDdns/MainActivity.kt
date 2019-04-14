@@ -10,6 +10,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import kotlinx.android.synthetic.main.activity_main.*
 import net.vicp.biggee.kotlin.Service
 import okhttp3.Cache
 import okhttp3.Credentials
@@ -73,6 +74,7 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
 
         val b = findViewById<View>(R.id.button) as Button
         val badb = findViewById<View>(R.id.adbbutton) as Button
+        val bloop = findViewById<View>(R.id.loopbutton) as Button
         val d = findViewById<EditText>(R.id.ddns)
         val u = findViewById<EditText>(R.id.username)
         val p = findViewById<EditText>(R.id.password)
@@ -89,25 +91,29 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
             header("Authorization", a)
         }.build()
 
+        val showLog = Runnable {
+            runOnUiThread {
+                if (l.text.length > 1000) {
+                    l.text = ""
+                }
+                l.append(Service.log)
+                Service.log.clear()
+            }
+        }
+
         Service.runnable = Runnable {
             val c = OkHttpClient().newBuilder().apply {
                 readTimeout(5, TimeUnit.SECONDS)
                 cache(Cache(cacheDir, Int.MAX_VALUE.toLong()))
             }.build()
             val res = c.newCall(r).execute()
-            runOnUiThread {
-                if (l.text.length > 1000) {
-                    l.text = ""
-                }
-                Service.addLog(res.body()!!.string())
-                l.append(Service.log)
-                Service.log.clear()
-            }
+            Service.addLog(res.body()!!.string())
         }
 
         Thread {
             val bindIntent = Intent(this, Service::class.java)
             bindService(bindIntent, this, BIND_AUTO_CREATE)
+            showLog.run()
         }.start()
 
         b.setOnClickListener {
@@ -115,6 +121,7 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
             if (::serviceBinder.isLateinit) {
                 serviceBinder.ddns()
             }
+            showLog.run()
         }
 
         badb.setOnClickListener {
@@ -122,6 +129,21 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
             if (::serviceBinder.isLateinit) {
                 serviceBinder.adbRemote()
             }
+            showLog.run()
+        }
+
+        loopbutton.setOnClickListener {
+            Service.addLog("button loop clicked")
+            if (::serviceBinder.isLateinit) {
+                serviceBinder.schedule.scheduleAtFixedRate({
+                    Service.addLog("ddns schedule started")
+                    serviceBinder.pool.execute {
+                        serviceBinder.ddns()
+                        showLog.run()
+                    }
+                }, 0, 1, TimeUnit.MINUTES)
+            }
+
         }
     }
 }

@@ -5,10 +5,7 @@ import android.content.Intent
 import android.os.IBinder
 import java.text.DateFormat
 import java.util.*
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.ThreadFactory
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 
 class Service : Service() {
     val binder by lazy { Binder() }
@@ -50,6 +47,7 @@ class Service : Service() {
 
     class Binder : android.os.Binder(), ThreadFactory {
         val queueList = LinkedBlockingQueue<Runnable>()
+        val schedule = Executors.newSingleThreadScheduledExecutor(this)
         val pool = ThreadPoolExecutor(
             1,
             1,
@@ -82,11 +80,14 @@ class Service : Service() {
          * create a thread is rejected
          */
         override fun newThread(r: Runnable?): Thread {
+            addLog("new thread in queue")
             while (pool.activeCount > 1) {
+                addLog("new thread is waiting")
                 Thread.sleep(10000)
             }
             r ?: return Thread()
             val t = Thread(r)
+            addLog("new thread get to run")
             return t
         }
     }

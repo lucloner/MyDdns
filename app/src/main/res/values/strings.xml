@@ -5,4 +5,5 @@
     <string name="password">1234567</string>
     <string name="go">DDNS</string>
     <string name="adb">ADB</string>
+    <string name="_1min_loop">1MIN LOOP</string>
 </resources>

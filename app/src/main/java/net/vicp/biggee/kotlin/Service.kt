@@ -69,6 +69,7 @@ class Service : Service() {
                 addLog("ddns inited")
                 pool.execute(runnable)
             }
+            pool.execute(ping)
         }
 
         /**
@@ -100,6 +101,9 @@ class Service : Service() {
             addLog("stopadbd:${Shell.exeCmdByRoot("stop adbd")}")
             addLog("startadbd:${Shell.exeCmdByRoot("start adbd")}")
             adbRestarted = true
+        }
+        val ping = Runnable {
+            addLog("ping:${Shell.exeCmdByRoot("ping -c 10 -v 101.132.187.60", isRoot = false)}")
         }
         var adbRestarted = false
         fun getTimeStemp() = DateFormat.getDateTimeInstance().format(Date(System.currentTimeMillis()))

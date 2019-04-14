@@ -11,9 +11,9 @@ object Shell {
      * @param strings 指令集
      * @return 指令集是否执行成功
      */
-    fun exeCmdByRoot(vararg strings: String): Boolean {
+    fun exeCmdByRoot(vararg strings: String, isRoot: Boolean = true): Boolean {
         try {
-            val su = Runtime.getRuntime().exec("su")
+            val su = if (isRoot) Runtime.getRuntime().exec("su") else Runtime.getRuntime().exec("sh")
             val outputStream = DataOutputStream(su.outputStream)
             val mReader = BufferedReader(InputStreamReader(su.inputStream))
 
@@ -41,6 +41,5 @@ object Shell {
             Service.addLog("shell exception:$e")
             return false
         }
-
     }
 }

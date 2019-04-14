@@ -94,7 +94,7 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
 
         val showLog = Runnable {
             runOnUiThread {
-                if (l.text.length > 1000) {
+                if (l.lineCount > 30) {
                     l.text = ""
                 }
                 l.append(Service.log)

@@ -26,7 +26,7 @@ object Shell {
             su.waitFor()
             outputStream.close()
 
-            val mRespBuff = StringBuffer("${System.currentTimeMillis()}:\n")
+            val mRespBuff = StringBuffer()
             val buff = CharArray(1024)
             var ch = mReader.read(buff)
             while (ch != -1) {

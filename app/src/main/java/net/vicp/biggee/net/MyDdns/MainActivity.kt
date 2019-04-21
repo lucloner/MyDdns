@@ -64,7 +64,11 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
 
         Service.addLog("app started")
 
-        val l = findViewById<TextView>(R.id.logView)
+        val l = findViewById<TextView>(R.id.logView).apply {
+            val maxrow = height / lineHeight
+            maxLines = maxrow + 1
+        }
+
         Thread.setDefaultUncaughtExceptionHandler { t, e ->
             runOnUiThread {
                 l.append(
@@ -94,7 +98,9 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
 
         val showLog = Runnable {
             runOnUiThread {
-                if (l.lineCount > 30) {
+                val painLength = Service.log.toString().replace("\n", "").length
+                val rows = Service.log.toString().length - painLength + 1
+                if (l.lineCount + rows > l.maxLines - 2) {
                     l.text = ""
                 }
                 l.append(Service.log)
@@ -123,7 +129,10 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
         Thread {
             val bindIntent = Intent(this, Service::class.java)
             bindService(bindIntent, this, BIND_AUTO_CREATE)
-            showLog.run()
+            while (Service.log.length > 0) {
+                Thread.sleep(500)
+                showLog.run()
+            }
         }.start()
 
         b.setOnClickListener {
@@ -131,8 +140,10 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
             waitService.run()
             serviceBinder ?: return@setOnClickListener
             serviceBinder!!.ddns()
-            Thread.sleep(1000)
-            showLog.run()
+            while (Service.log.length > 0) {
+                Thread.sleep(500)
+                showLog.run()
+            }
         }
 
         badb.setOnClickListener {
@@ -140,8 +151,10 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
             waitService.run()
             serviceBinder ?: return@setOnClickListener
             serviceBinder!!.adbRemote()
-            Thread.sleep(1000)
-            showLog.run()
+            while (Service.log.length > 0) {
+                Thread.sleep(500)
+                showLog.run()
+            }
         }
 
         bloop.setOnClickListener {
@@ -152,8 +165,10 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
                 Service.addLog("ddns schedule started")
                 serviceBinder!!.pool.execute {
                     serviceBinder!!.ddns()
-                    Thread.sleep(1000)
-                    showLog.run()
+                    while (Service.log.length > 0) {
+                        Thread.sleep(500)
+                        showLog.run()
+                    }
                 }
             }, 0, 1, TimeUnit.MINUTES)
         }

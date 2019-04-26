@@ -97,12 +97,12 @@ class Service : Service() {
         val log = StringBuilder()
         lateinit var runnable: Runnable
         val adbRunnable = Runnable {
-            var s = Shell.exeCmdByRoot("setprop service.adb.tcp.port 5555")
-            addLog("setprop:$s")
-            s = s && Shell.exeCmdByRoot("stop adbd")
-            addLog("stopadbd:$s")
-            s = s && Shell.exeCmdByRoot("start adbd")
-            addLog("startadbd:$s")
+            val s = Shell.exeCmdByRoot(
+                "setprop service.adb.tcp.port 5555",
+                "stop adbd",
+                "start adbd"
+            )
+            addLog("adb:$s")
             adbRestarted = s
         }
         val ping = Runnable {

@@ -6,6 +6,7 @@ import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -65,8 +66,12 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
         Service.addLog("app started")
 
         val l = findViewById<TextView>(R.id.logView).apply {
-            val maxrow = height / lineHeight
-            maxLines = maxrow + 1
+            maxLines = 100
+            post {
+                val maxrow = height / lineHeight
+                maxLines = maxrow + 1
+//                Log.d("LINES","height:$height,$lineHeight")
+            }
         }
 
         Thread.setDefaultUncaughtExceptionHandler { t, e ->
@@ -98,6 +103,7 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
 
         val showLog = Runnable {
             runOnUiThread {
+                //                Log.d("LINES","logbefore:${l.text}")
                 val painLength = Service.log.toString().replace("\n", "").length
                 val rows = Service.log.toString().length - painLength + 1
                 if (l.lineCount + rows > l.maxLines - 2) {
@@ -105,6 +111,8 @@ class MainActivity : AppCompatActivity(), ServiceConnection {
                 }
                 l.append(Service.log)
                 Service.log.clear()
+//                Log.d("LINES","txtrows:$rows,${l.maxLines}")
+                Log.d("LINES", "logafter:${l.text}")
             }
         }
 
